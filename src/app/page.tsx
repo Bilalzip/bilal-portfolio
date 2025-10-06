@@ -70,10 +70,10 @@ export default function Page () {
             </p>
           </div>
           <div className="rounded-2xl border bg-card p-6 shadow-sm">
-            <p className="leading-relaxed">
-              IT roles at <strong>Confederation College</strong>: Bash automation, 
-              Azure AD, Windows/Linux troubleshooting.
-            </p>
+  <p className="leading-relaxed">
+  <strong>Full-Stack Developer</strong> — Connected To Culture, Inc. (Mar 2024 – Sep 2024): LangChain + vector search, 
+  Fastify + TypeScript APIs with secure auth, Jenkins CI/CD for faster deployments.
+</p>
           </div>
           <div className="rounded-2xl border bg-card p-6 shadow-sm">
             <p className="leading-relaxed">

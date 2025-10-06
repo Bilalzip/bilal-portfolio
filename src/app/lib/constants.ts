@@ -90,21 +90,20 @@ export const experience = [
     type: "Part-Time",
     highlights: [
       "Assist students with software/hardware/network issues; productivity up",
-      "Guide on coding fundamentals, debugging, IDE/dev tools",
       "Help navigate IT resources and common tech problems",
     ],
   },
   {
-    title: "Computer Service Help Desk Assistant",
+    title: "Computer Help Desk Assistant - (Summer Student)",
     company: "Confederation College",
     location: "Thunder Bay, ON",
     period: "May 2025 – Aug 2025",
     type: "Full-Time",
     highlights: [
-      "Bash scripts to automate logs, installs, account setup → faster support",
-      "Streamlined monitoring + ticket resolution processes",
-      "Managed Azure AD provisioning and access control",
-      "Resolved Windows/Linux issues across OS/hardware/software",
+      "Set up and configure lab and classroom computer workstations",
+      "Deploy software images and install applications as needed",
+      "Pack, move, and set up computer equipment for summer projects",
+      "Assist IT staff with network cabling, AV/e-classroom, and web-conference room maintenance.",
     ],
   },
   {
@@ -112,7 +111,7 @@ export const experience = [
     company: "Connected To Culture, Inc.",
     location: "Washington, DC",
     period: "Mar 2024 – Sep 2024",
-    type: "Volunteer",
+    type: "Full-Time",
     highlights: [
       "LangChain + vector search recommendations for engagement",
       "Fastify + TypeScript APIs; secure auth; faster responses",
