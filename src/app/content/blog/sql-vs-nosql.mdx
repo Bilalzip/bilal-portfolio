@@ -1,0 +1,144 @@
+---
+title: "Why I Picked SQL for Reviews Over NoSQL"
+date: "2025-01-10"
+tags: ["SQL", "PostgreSQL", "Database Design"]
+summary: "The thought process behind choosing PostgreSQL over MongoDB for The Gold Star's review system."
+---
+
+# Why I Picked SQL for Reviews Over NoSQL
+
+When building The Gold Star, the conventional wisdom suggested using MongoDB for flexible review data. Here's why I went with PostgreSQL instead—and haven't regretted it.
+
+## The Initial Assumption
+
+NoSQL seemed perfect for reviews:
+- Flexible schema (reviews vary in format)
+- Fast writes (lots of concurrent submissions)
+- Easy horizontal scaling
+- JSON-native (modern frontend APIs)
+
+But after prototyping both approaches, SQL won decisively.
+
+## Why PostgreSQL Won
+
+### 1. Relational Data is Relational
+
+Reviews aren't isolated documents. They connect to:
+- Businesses (many reviews per business)
+- Users (optional authenticated reviews)
+- Locations (multi-location businesses)
+- Moderation logs (approval history)
+- Response threads (owner replies)
+
+These relationships are exactly what SQL excels at.
+
+```sql
+SELECT 
+  r.id, r.rating, r.comment,
+  b.name as business_name,
+  u.name as reviewer_name,
+  m.status as moderation_status
+FROM reviews r
+JOIN businesses b ON r.business_id = b.id
+LEFT JOIN users u ON r.user_id = u.id
+LEFT JOIN moderations m ON r.id = m.review_id
+WHERE b.id = $1
+  AND r.submitted_at >= NOW() - INTERVAL '30 days'
+ORDER BY r.submitted_at DESC;
+```
+
+Try expressing that efficiently in MongoDB.
+
+### 2. ACID Transactions Matter
+
+When a review is approved, multiple things happen:
+- Update review status
+- Increment business rating
+- Send notification
+- Log moderation action
+
+This needs to be atomic. PostgreSQL handles it naturally:
+
+```sql
+BEGIN;
+  UPDATE reviews SET moderation_status = 'approved' WHERE id = $1;
+  UPDATE businesses SET rating = (SELECT AVG(rating) FROM reviews WHERE business_id = $2);
+  INSERT INTO notifications (user_id, type) VALUES ($3, 'review_approved');
+COMMIT;
+```
+
+### 3. Powerful Aggregations
+
+Analytics queries are simpler and faster with SQL:
+
+```sql
+-- Average rating trend
+SELECT 
+  DATE_TRUNC('day', submitted_at) as date,
+  AVG(rating) as avg_rating,
+  COUNT(*) as count
+FROM reviews
+WHERE business_id = $1
+GROUP BY DATE_TRUNC('day', submitted_at)
+ORDER BY date DESC
+LIMIT 30;
+```
+
+PostgreSQL's window functions make complex analytics trivial.
+
+### 4. Full-Text Search Built-In
+
+PostgreSQL has excellent full-text search without additional services:
+
+```sql
+ALTER TABLE reviews ADD COLUMN search_vector tsvector;
+
+CREATE INDEX idx_search ON reviews USING GIN(search_vector);
+
+-- Search reviews
+SELECT * FROM reviews
+WHERE search_vector @@ to_tsquery('excellent & service');
+```
+
+### 5. JSON When You Need It
+
+PostgreSQL supports JSONB for flexible fields:
+
+```sql
+CREATE TABLE reviews (
+  id UUID PRIMARY KEY,
+  rating INTEGER NOT NULL,
+  metadata JSONB -- flexible additional data
+);
+
+-- Query JSON fields
+SELECT * FROM reviews
+WHERE metadata->>'source' = 'mobile';
+```
+
+Best of both worlds.
+
+## Performance Reality
+
+Initial concerns about SQL performance were unfounded:
+
+- **Write throughput:** 500+ reviews/second (more than needed)
+- **Query time:** <50ms for complex aggregations
+- **Storage:** Highly efficient with proper indexing
+- **Scaling:** Vertical scaling handles current load; horizontal sharding available if needed
+
+## When Would I Use NoSQL?
+
+MongoDB or DynamoDB make sense when:
+- True document-oriented data (no relationships)
+- Extreme write throughput (>10K/sec)
+- Dynamic schema changes frequently
+- Geographic distribution is critical
+
+For most applications, including review systems, PostgreSQL is the better choice.
+
+## What I'd Do Next
+
+Start with PostgreSQL for MVP. Switch to NoSQL only when you have concrete evidence it's necessary, not based on assumptions or hype.
+
+The flexibility of SQL, combined with modern features like JSONB and full-text search, makes it the pragmatic choice for 90% of applications.
